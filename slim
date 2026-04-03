@@ -1,0 +1,249 @@
+#!/usr/bin/env php
+<?php
+ 
+$command = $argv[1] ?? null;
+$name = $argv[2] ?? null;
+
+switch($command){
+
+    case "install":
+        install_slim();
+        break;
+
+    case "make:controller":
+        create_controller();
+        $name = "";
+        break;
+
+    case "make:middleware":
+        create_middleware();
+        $name = "";
+        break;
+
+    case "update":
+        update_slim();
+        break;
+
+    default:
+        echo "please enter a valid command\n";
+        echo "  slim install\n";
+        echo "  slim update\n";
+        echo "  slim make:controller <Name>\n";
+        echo "  slim make:middleware <Name>\n";
+
+}
+
+function install_slim(){
+
+    $slim = false;
+    $env = false;
+    $phpfastcache = false;
+
+    $slim_install = shell_exec('composer require slim/slim && echo 1');
+
+    if($slim_install == 1){
+
+        $slim = true;
+
+    }else{
+
+        $slim = false;
+
+    }
+
+    $env = shell_exec('composer require vlucas/phpdotenv && echo 1');
+
+    if($env == 1){
+
+        $env = true;
+
+    }else{
+
+        $env = false;
+
+    }
+
+    $cache = shell_exec('composer require phpfastcache/phpfastcache && echo 1');
+
+    if($cache == 1){
+
+        $phpfastcache = true;
+
+    }else{
+
+        $phpfastcache = false;
+
+    }
+
+    mkdir("public", 0777, true);
+    mkdir("src", 0777, true);
+
+    mkdir("src/Controllers");
+    mkdir("src/Database");
+    mkdir("src/Middlewares");
+    mkdir("src/Helper");
+
+    file_put_contents("public/.htaccess", "
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+    ");
+
+    file_put_contents("public/index.php", 
+    '<?php\n
+require __DIR__ . "/Api/vendor/autoload.php";\n\n
+use Dotenv\Dotenv;\n\n\n
+$env = Dotenv::createImmutable( __DIR__ . "/Api");\n\n
+$env->load();\n\n
+    ');
+
+    file_put_contents(".env", 
+    "APP_LINK=''\n\n
+DB_HOST=''
+DB_NAME=''
+DB_USER=''
+DB_PASSWORD=''
+    ");
+
+    file_put_contents(".env.example", 
+    "APP_LINK='https:www.example.com'\n\n
+DB_HOST='localhost'
+DB_NAME=''
+DB_USER=''
+DB_PASSWORD=''
+
+    ");
+    file_put_contents(".gitignore", 
+    "/.env\n
+slim
+    ");
+
+
+    $compser_data = json_decode(file_get_contents("composer.json") , true);
+
+    $composer_path = [
+
+        "require" => [
+
+            "slim/slim" => "^4.0",
+            "slim/psr7" => "^1.8",
+            "vlucas/phpdotenv" => "^5.6",
+            "phpfastcache/phpfastcache" => "^9.2"
+
+        ],
+
+        "autoload" => [
+
+            "psr-4" => [
+
+                 "App\\" => "src/"
+
+            ]
+
+        ]
+
+    ];
+
+    file_put_contents("composer.json", json_encode($composer_path, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    shell_exec('composer dump-autoload');
+
+    shell_exec('composer update');
+
+    echo "\n";
+    echo ($slim == true) ? "====> Slim insatlled [✔]\n" : "====> Slim not installed [✖]\n";
+    echo ($env == true) ? "====> Dotenv insatlled [✔]\n" : "====> Dotenv not installed [✖]\n";
+    echo ($phpfastcache == true) ? "====> php fast cache insatlled [✔]\n" : "====> php fast cache not installed [✖]\n";
+    echo "\n";
+
+
+}
+
+function create_controller(){
+
+    global $name;
+
+    if(!$name){
+
+        echo "Controller name required\n";
+        exit;
+
+    }
+
+    $path = __DIR__ . "/src/Controllers/$name.php";
+
+    $content = ' <?php
+
+namespace App\Controllers;
+
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
+
+class $name {
+
+    public function index(Request $request, Response $response){}
+
+}';
+
+    file_put_contents($path, $content);
+
+    echo "Controller created : $name\n";
+
+}
+
+function create_middleware(){
+
+    global $name;
+
+    if(!$name){
+
+        echo "Middleware name required\n";
+        exit;
+
+    }
+
+    $path = __DIR__ . "/src/Middlewares/$name.php";
+
+    $content = '<?php
+
+namespace App\Middlewares;
+
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Http\Message\ResponseInterface;
+
+class $name {
+
+    public function __invoke(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface{
+
+        return $handler->handle($request);
+
+    }
+
+}
+   
+';
+
+    file_put_contents($path, $content);
+
+    echo "Middleware created : $name\n";
+
+}
+
+function update_slim(){
+
+    $composer_json_file = file_get_contents("composer.json", true);
+
+    shell_exec('composer dump-autoload');
+
+    shell_exec('composer update');
+
+    shell_exec('composer dump-autoload');
+
+    echo " \n";
+    echo (empty($composer_json_file)) ? "===> Composer.json file not found\n" : "===> Update complete\n";
+    echo " \n";
+
+}
+
