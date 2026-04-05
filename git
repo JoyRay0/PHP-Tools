@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+
+<?php
+
+echo "====================================\n";
+echo "Setup git\n";
+echo "====================================\n";
+
+echo shell_exec("git init");
+
+echo " \n";
+echo "Branch name:\n";
+$branch_name = readline("=>");
+
+echo shell_exec("git branch -M " . escapeshellarg($branch_name) . " 2>&1");
+
+echo shell_exec("git add .");
+
+echo " \n";
+echo "Commit message:\n";
+$commit_message = readline("=>");
+
+echo shell_exec("git commit -m " . escapeshellarg($commit_message) . " 2>&1");
+
+echo " \n";
+echo "Github repo link:\n";
+$repo_link = readline("=>");
+
+echo shell_exec("git remote add origin " . escapeshellarg($repo_link) . " 2>&1");
+
+echo " \n";
+echo "===> Git steup compeleted";
+echo " \n";
+
