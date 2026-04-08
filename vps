@@ -1,0 +1,325 @@
+#!/usr/bin/env php
+<?php
+
+echo <<<BANNER
+                                                                                                                   
+    ██  ██ █████▄ ▄█████   ▄█████ ██████ ██████ ██  ██ █████▄ 
+    ██▄▄██ ██▄▄█▀ ▀▀▀▄▄▄   ▀▀▀▄▄▄ ██▄▄     ██   ██  ██ ██▄▄█▀ 
+     ▀██▀  ██     █████▀   █████▀ ██▄▄▄▄   ██   ▀████▀ ██     
+BANNER."\n";
+echo " \n";
+
+full_list();
+
+$pm =  get_distro_info();
+
+echo "Package Manager : ".$pm;
+echo " \n";
+
+$select = readline("Your choice: =>");
+
+user_choice($select);
+function user_choice(string $choice){
+
+    global $pm;
+
+    if($pm == "unknown") return;
+
+    switch($choice){
+
+        case"0":
+            exit;
+            break;
+
+        //-------------------------------------------------------
+        case "1":     //nginx
+            run_command(
+              $pm,
+              [
+                "sudo apt update -y",
+                "sudo apt upgrade -y",
+                "sudo apt install nginx"
+              ],
+              [
+                "sudo dnf upgrade -y",
+                "sudo dnf install nginx"
+              ],
+              [
+                "sudo pacman -Syu --noconfirm",
+                "sudo pacman -S nginx"
+              ]);
+          break;
+
+        case "2":     //apache
+            run_command(
+              $pm,
+              [
+                "sudo apt update -y",
+                "sudo apt upgrade -y",
+                "sudo apt install apache2 -y",
+                "sudo systemctl start apache2",
+                "sudo systemctl enable apache2"
+              ],
+              [
+                "sudo dnf upgrade -y ",
+                "sudo dnf install httpd -y",
+                "sudo systemctl start httpd",
+                "sudo systemctl enable httpd"
+              ],
+              [
+                "sudo pacman -Syu --noconfirm",
+                "sudo pacman -Syu apache",
+                "sudo systemctl start httpd",
+                "sudo systemctl enable httpd"
+              ]);
+          break;
+        //-------------------------------------------------------
+
+        //-------------------------------------------------------
+        case "3":     //Webuzo
+            run_command(
+              $pm,
+              [
+                "sudo apt update -y",
+                "sudo apt upgrade -y",
+                "sudo apt install curl wget -y",
+                "sudo apt install wget curl perl tar bzip2 unzip -y",
+                "cd /tmp",
+                "wget -N http://files.webuzo.com/install.sh",
+                "chmod +x install.sh",
+                "sudo ./install.sh"
+              ],
+              [
+                "sudo dnf upgrade -y",
+                "sudo dnf install curl wget -y",
+                "sudo dnf install wget curl perl tar bzip2 unzip -y",
+                "cd /tmp",
+                "wget -N http://files.webuzo.com/install.sh",
+                "chmod +x install.sh",
+                "sudo ./install.sh"
+              ],
+              [
+                "sudo pacman -Syu --noconfirm",
+                "sudo pacman -Syu curl wget --noconfirm",
+                "sudo pacman -S wget curl perl tar bzip2 unzip --noconfirm",
+                "cd /tmp",
+                "wget -N http://files.webuzo.com/install.sh",
+                "chmod +x install.sh",
+                "sudo ./install.sh"
+              ]);
+          break;
+
+        case "4":     //nginx
+            run_command(
+              $pm,
+              [
+                "sudo apt update -y",
+                "sudo apt upgrade -y",
+                "sudo apt install curl wget -y",
+                "wget -O installer.sh https://cyberpanel.net/install.sh",
+                "sudo bash installer.sh --force",
+                "sudo ufw allow 8090/tcp",
+                "sudo ufw reload"
+              ],
+              [
+                "sudo dnf upgrade -y",
+                "sudo dnf install curl wget -y",
+                "wget -O installer.sh https://cyberpanel.net/install.sh",
+                "sudo bash installer.sh --force",
+                "sudo ufw allow 8090/tcp",
+                "sudo ufw reload"
+              ],
+              [
+                "sudo pacman -Syu --noconfirm",
+                "sudo pacman -Syu curl wget --noconfirm",
+                "wget -O installer.sh https://cyberpanel.net/install.sh",
+                "sudo bash installer.sh --force",
+                "sudo ufw allow 8090/tcp",
+                "sudo ufw reload"
+              ]);
+          break;
+
+        //-------------------------------------------------------
+
+
+        default:
+        echo "Invalid choice\n";
+        exit;
+
+    }
+
+}
+
+function full_list(){
+
+    echo "Select what you want to install:\n";
+
+    echo " \n";
+    output("0", "Exit");
+
+    echo "============= Web Server =============\n";
+    output("1", "Nginx");
+    output("2", "Apache");
+
+    echo "============= Control Panel =============\n";
+    output("3", "Webuzo");
+    output("4", "CyberPanel");
+    output("5", "HestiaCP");
+    output("6", "aaPanel");
+    output("7", "Webmin");
+    output("8", "Virtualmin");
+    output("9", "ISPConfig");
+    output("10", "Froxlor");
+    output("11", "VestaCP");
+    
+    echo "============= Firewalls =============\n";
+    output("12", "ufw (Uncomplicated Firewall)");
+    output("13", "firewalld");
+    output("14", "iptables / nftables");
+    output("15", "CSF (ConfigServer Security & Firewall)");
+    output("16", "fail2ban");
+    output("17", "Shorewall (Shoreline Firewall)");
+
+    echo "============= SSL =============\n";
+    output("18", "Let’s Encrypt");
+    output("19", "ZeroSSL");
+    output("20", "SSL For Free (powered by ZeroSSL)");
+    output("21", "Cloudflare Origin CA SSL");
+    output("22", "Buypass Go SSL");
+
+    echo "============= Database =============\n";
+    output("23", "MySQl");
+    output("24", "PostgreSQL");
+    output("25", "MongoDB");
+    output("26", "SQLite");
+    output("27", "MariaDB");
+    output("28", "Percona Server");
+    output("29", "CockroachDB");
+    output("30", "CouchDB");
+    output("31", "Cassandra");
+    output("32", "RethinkDB");
+    output("33", "DynamoDB Local");
+
+    echo "============= Cache =============\n";
+    output("34", "Redis");
+    output("35", "Memcached");
+    output("36", "KeyDB");
+    output("37", "DragonflyDB");
+
+    echo "============= DB manage tool =============\n";    
+    output("38", "phpMyAdmin");
+    output("39", "Adminer");
+    output("40", "pgAdmin");
+    output("41", "Mongo Express");
+    output("42", "phpLiteAdmin");
+    output("43", "Cockpit");
+
+    echo "============= Languages =============\n";
+    output("44", "PHP");
+    output("45", "Python");
+    output("46", "JavaScript");
+    output("47", "Java");
+    output("48", "Go");
+    output("49", "Ruby");
+    output("50", "C#");
+    output("51", "Rust");
+    output("52", "Kotlin");
+    output("53", "C++");
+
+    echo " \n";
+
+}
+
+function output(string $number, string $name){
+
+    $green_color = "\033[32m";
+    $reset_color = "\033[0m";
+    $bold = "\033[1m";
+
+    echo "[{$bold}{$green_color}$number{$reset_color}] {$bold}$name\n";
+
+}
+
+function get_distro_info() : string{
+
+    $package_manager = "unknown";
+
+    $distro = @file_get_contents("/etc/os-release");
+
+    if($distro && preg_match('/^ID_LIKE="?(.+?)"?$/m', $distro, $m)){
+
+        $distro_name = explode(" ", strtolower(trim($m[1], "\" \t\n\r\0\x0B")));
+
+       if(in_array("debian", $distro_name)){
+
+         $package_manager = "apt";
+
+       }elseif(in_array("rhel", $distro_name) || in_array("fedora", $distro_name)){
+
+         $package_manager = "dnf";
+
+       }elseif(in_array("arch", $distro_name)){
+
+         $package_manager = "pacman";
+
+       }
+
+    }
+
+    return $package_manager;
+
+}
+
+function run_command(
+  string $pm, 
+  array $apt_command = [],  
+  array $dnf_command = [],
+  array $pacman_command = [],){
+
+    if(empty($pm) || $pm == "unknown") return;
+
+    switch($pm){
+
+      case"apt":
+
+        foreach($apt_command as $apt_cmd){
+
+            echo "Running command: " . $apt_cmd . "\n";
+            echo "-----------------------------------------------\n";
+            echo shell_exec($apt_cmd . " 2>&1")."\n";
+
+        }
+
+        break;
+
+      case"dnf":
+
+        foreach($dnf_command as $dnf_cmd){
+
+            echo "Running command: " . $dnf_cmd . "\n";
+            echo "-----------------------------------------------\n";
+            echo shell_exec($dnf_cmd . " 2>&1")."\n";
+
+        }
+
+        break;
+
+        case"pacman":
+
+        foreach($pacman_command as $pacman_cmd){
+
+            echo "Running command: " . $pacman_cmd . "\n";
+            echo "-----------------------------------------------\n";
+            echo shell_exec($pacman_cmd . " 2>&1")."\n";
+
+        }
+
+        break;
+
+      default:
+      echo "Not supported\n";
+      exit;
+
+    }
+
+}
