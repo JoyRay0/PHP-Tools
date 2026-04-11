@@ -1,0 +1,180 @@
+#!/usr/bin/env php
+
+<?php
+
+$command = $argv[1] ?? null;
+
+$bold_text = "\033[1m";
+$normal_text = "\033[0m";
+
+switch($command){
+
+    case "char":
+
+        bangla_char();
+
+        break;
+
+    case "write":
+
+        input();
+
+        break;
+
+
+    default:
+    echo "Invalid command\n";
+    echo "use: php bangla char\n";
+    echo "use: php bangla write\n";
+
+    exit;
+
+}
+
+function bangla_char(){
+
+    //-----------------------------------------------
+    output("অ  "); output("আ  "); output("ই  "); output("ঈ  "); output("উ\n"); 
+    output("ঊ  "); output("এ  "); output("ঐ  "); output("ও  "); output("ঔ\n");
+    echo "\n";
+    //-----------------------------------------------
+
+}
+
+function input(){
+
+    global $bold_text, $normal_text;
+
+    $word_map = [
+
+        "ami"=>"আমি","tumi"=>"তুমি","apni"=>"আপনি","se"=>"সে","tara"=>"তারা","amra"=>"আমরা",
+        "amar"=>"আমার","tomar"=>"তোমার","tar"=>"তার","amader"=>"আমাদের","tomader"=>"তোমাদের",
+        "tomke" => "তোমাকে", "tomka" => "তোমাকে", "tomk" => "তোমাকে", "amadr"=>"আমাদের",
+        "amr"=>"আমার", "tomra"=>"তোমারা", "tomora"=>"তোমারা", "abr"=>"আবার", "aber"=>"আবার",
+        "amadar"=>"আমাদের",
+
+        "valo"=>"ভালো","bhalo"=>"ভালো","kharap"=>"খারাপ","sundor"=>"সুন্দর","boro"=>"বড়","choto"=>"ছোট",
+        "notun"=>"নতুন","puraton"=>"পুরাতন","lal"=>"লাল","nil"=>"নীল","shada"=>"সাদা","kalo"=>"কালো",
+
+        "asi"=>"আছি","achi"=>"আছি","chilam"=>"ছিলাম","thaki"=>"থাকি","thakbo"=>"থাকবো","thakbe"=>"থাকবে",
+        "thakchi"=>"থাকছি","thaklam"=>"থাকলাম",
+
+        "jai"=>"যাই","jabo"=>"যাবো","jacchi"=>"যাচ্ছি","jaitesi"=>"যাচ্ছি","asbo"=>"আসবো","ashbo"=>"আসবো","aschi"=>"আসছি",
+        "jodi"=>"যদি", "jaboo"=>"যাবো", "jaibo"=>"যাইবো", "jibo"=>"যাইবো", "jate"=>"যেতে", "jete"=>"যেতে",
+
+        "kori"=>"করি","kore"=>"করে","korte"=>"করতে","korchi"=>"করছি","korse"=>"করেছে",
+        "korbo"=>"করবো","korbe"=>"করবে","korlam"=>"করলাম", "koi" => "কই", "kothy" => "কোথায়",
+        "kai" => "কৈ", "koitam" => "কইতাম", "kano" => "কেন", "ke"=>"কি",
+        "ki"=>"কি","keno"=>"কেন","kothay"=>"কোথায়","kemon"=>"কেমন","kobe"=>"কবে","kibhabe"=>"কিভাবে","koto"=>"কত",
+
+        "khai"=>"খাই","khabo"=>"খাবো","khaisi"=>"খেয়েছি","khaichi"=>"খেয়েছি","khete"=>"খেতে","khaite"=>"খেতে",
+        "khichi"=>"খেয়েছি",
+
+        "ghum"=>"ঘুম","ghumai"=>"ঘুমাই","ghumaisi"=>"ঘুমিয়েছি","uthsi"=>"উঠেছি","uthchi"=>"উঠছি",
+        "gom" => "ঘুম", "utheci"=>"উঠেছি", "uthechi"=>"উঠেছি",
+
+        "na"=>"না","hya"=>"হ্যাঁ","yes"=>"হ্যাঁ","no"=>"না","thik"=>"ঠিক","vul"=>"ভুল",
+
+        "onek"=>"অনেক","ekto"=>"একটু","beshi"=>"বেশি","kom"=>"কম","aro"=>"আরো","sob"=>"সব","kichu"=>"কিছু",
+
+        "aj"=>"আজ","kal"=>"কাল","rat"=>"রাত","din"=>"দিন","sokal"=>"সকাল","bikal"=>"বিকাল","dupur"=>"দুপুর",
+
+        "bari"=>"বাড়ি","ghor"=>"ঘর","school"=>"স্কুল","college"=>"কলেজ","office"=>"অফিস","dokhan"=>"দোকান","bazar"=>"বাজার",
+
+        "bondhu"=>"বন্ধু","friend"=>"বন্ধু","bhai"=>"ভাই","bon"=>"বোন","ma"=>"মা","baba"=>"বাবা",
+
+        "moja"=>"মজা","mojaa"=>"মজা","valo lagse"=>"ভালো লাগছে",
+
+        "jabo na"=>"যাবো না","asbo na"=>"আসবো না",
+
+        "bujhi"=>"বুঝি","bujhte"=>"বুঝতে","bujhlam"=>"বুঝলাম",
+
+        "dekhi"=>"দেখি","dekho"=>"দেখো","dekhechi"=>"দেখেছি", "dekhechilam"=>"দেখেছিলাম", "dekchilam"=>"দেখেছিলাম",
+
+        "likhi"=>"লিখি","likho"=>"লিখো","likhechi"=>"লিখেছি", "likhechilam"=>"লিখেছিলাম", "likachilam"=>"লিখেছিলাম",
+
+        "pori"=>"পড়ি","poro"=>"পড়ো","porchi"=>"পড়ছি","porlam"=>"পড়লাম", "portam"=>"পড়তাম",
+
+        "sotti"=>"সত্যি","mithya"=>"মিথ্যা", "sotto"=>"সত্য", "mithye"=>"মিথ্যে",
+
+        "khushi"=>"খুশি","dukho"=>"দুঃখ","rag"=>"রাগ","bhoy"=>"ভয়", "kub" => "খুব",
+
+        "bhalo lage"=>"ভালো লাগে",
+
+        "gari"=>"গাড়ি","bus"=>"বাস","train"=>"ট্রেন","plane"=>"প্লেন", "traning" => "ট্রেনিং", "proshikon" => "প্রশিক্ষণ", "proshikkon" => "প্রশিক্ষণ",
+
+        "pani"=>"পানি","vat"=>"ভাত","ruti"=>"রুটি","mangsho"=>"মাংস","mach"=>"মাছ", "dal" => "ডাল", "torkari" => "তরকারি", "tarkari" => "তরকারি",
+
+        "cha"=>"চা","coffee"=>"কফি","dudh"=>"দুধ","chini"=>"চিনি", "chinitam" => "চিনিতাম", "cinitam" => "চিনিতাম",
+
+        "bikel"=>"বিকাল","raat"=>"রাত","shokal"=>"সকাল", "bela" => "বেলা", "obela" => "অবেলা",
+
+        "ghore"=>"ঘরে","baire"=>"বাইরে","vitore"=>"ভিতরে","bahire"=>"বাহিরে",
+
+        "upar"=>"উপর","niche"=>"নিচে","pase"=>"পাশে","samne"=>"সামনে","pichone"=>"পিছনে",
+
+        "ekhane"=>"এখানে","okhane"=>"ওখানে","sekhane"=>"সেখানে", "jekhane"=>"যেখানে",
+
+        "ekane"=>"এখানে","okane"=>"ওখানে","sekane"=>"সেখানে", "jekane"=>"যেখানে",
+
+        "eta"=>"এটা","ota"=>"ওটা","seta"=>"সেটা", "jeta"=>"যেটা",
+
+        "sobai"=>"সবাই","sobar"=>"সবার","sobgulo"=>"সবগুলো",
+
+        "prothom"=>"প্রথম","ditiyo"=>"দ্বিতীয়","tritiyo"=>"তৃতীয়","shesh"=>"শেষ", "ses"=>"শেষ", "sesh"=>"শেষ",
+
+        "age"=>"আগে","pore"=>"পরে", "paro" => "পারো", "pharo" => "পারো",
+
+        "ekbar"=>"একবার","duibar"=>"দুইবার","barbar"=>"বারবার",
+
+        "ajke"=>"আজকে","kalke"=>"কালকে",
+
+        "khub"=>"খুব", "valobashi" => "ভালোবাসি", "valobasi" => "ভালোবাসি",
+
+        "ekdom"=>"একদম", "gegasa" => "জিজ্ঞাসা", "gegas" => "জিজ্ঞেস", "jeggas" => "জিজ্ঞেস", "gegasha" => "জিজ্ঞেসা", "jeggasha" => "জিজ্ঞেসা",
+
+        "tahole"=>"তাহলে","tai"=>"তাই", "tate" => "তাতে", "tati" => "তাতি",
+
+        "abar"=>"আবার","ekhono"=>"এখনো", "bujte"=>"বুঝতে", "bojte"=>"বুঝতে", "bujta"=>"বুঝতে", "bojta"=>"বুঝতে",
+
+        "bujhte pari"=>"বুঝতে পারি","korte pari"=>"করতে পারি","jabo kina"=>"যাবো কিনা", "jate pari" => "যেতে পারি", "jete pari" => "যেতে পারি",
+
+        "birokto" => "বিরক্ত", "virokto" => "বিরক্ত", "mane" => "মানে", "mone" => "মনে", "dhore" => "ধরে", "dhora" => "ধরে", "dore" => "দরে", "dora" => "দরে",
+
+    ];
+
+   echo $bold_text . "Enter your text:$normal_text\n";
+   $user_input = readline("=>");
+
+   if(empty($user_input)){
+
+      echo "Empty text\n";
+      return;
+
+   }
+
+   $words = explode(" ", strtolower($user_input));
+
+   $result = [];
+
+   foreach($words as $w){
+
+      $result[] = $word_map[$w] ?? $w;
+
+   }
+
+   $output = implode(" ", $result);
+
+   echo " \n";
+   echo "Input =>". $user_input . "\n";
+   echo "Output =>". $output . "\n";
+
+}
+
+function output(string $char){
+
+    global $bold_text, $normal_text;
+
+    echo "{$bold_text}$char{$normal_text}";
+
+}
