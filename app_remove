@@ -1,0 +1,45 @@
+#!/usr/bin/env php
+
+<?php
+
+echo "Search your app: \n";
+$search_app_name = readline("=>");
+
+if(empty($search_app_name)){
+
+    echo "Empty app name\n";
+    exit;
+
+}
+
+$app_list = shell_exec("dpkg-query -W -f='\${Package}\n' | grep $search_app_name");
+
+echo " \n";
+echo "=====================================\n";
+echo $app_list;
+echo "=====================================\n";
+echo " \n";
+
+echo "Enter your app name to delete:\n";
+$current_app_name = readline("=>");
+
+if(empty($current_app_name)) return;
+
+$apps = array_filter(explode("\n", trim($app_list)));
+
+if(in_array($current_app_name, $apps)){
+
+    echo $current_app_name . " Found\n";
+    passthru("sudo apt remove " . escapeshellarg($current_app_name) . " -y 2>&1");
+    passthru("sudo apt purge " . escapeshellarg($current_app_name) . " -y 2>&1");
+    passthru("sudo apt autoremove -y 2>&1");
+
+    echo "\n";
+    echo "===> {$current_app_name} removed\n";
+
+}else{
+
+    echo $current_app_name . " Not found\n";
+    exit;
+
+}
