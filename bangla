@@ -4,6 +4,7 @@
 
 $command = $argv[1] ?? null;
 
+
 $bold_text = "\033[1m";
 $normal_text = "\033[0m";
 
@@ -39,6 +40,24 @@ function bangla_char(){
     echo "\n";
     //-----------------------------------------------
 
+    //--------------------------------------------------------------
+    output("ক  "); output("খ  "); output("গ  "); output("ঘ  "); output("ঙ  "); output("চ  "); output("ছ\n");
+    output("জ  "); output("ঝ  "); output("ঞ  "); output("ট  "); output("ঠ  "); output("ড  "); output("ঢ\n");
+    output("ণ  "); output("ত  "); output("থ  "); output("দ  "); output("ধ  "); output("ন  "); output("প\n");
+    output("ফ  "); output("ব  "); output("ভ  "); output("ম  "); output("য  "); output("র  "); output("ল\n");
+    output("শ  "); output("ষ  "); output("স  "); output("হ  "); output("ড়  "); output("ঢ়  "); output("য়\n");
+    output("ৎ  "); output("ঁ  ");
+    echo "\n";
+    //--------------------------------------------------------------
+
+    //-----------------------------------------------
+    output("ক্ষ  "); output("ঞ্জ  "); output("জ্ঞ  "); output("ন্ধ  "); output("ক্ত\n"); 
+    output("ষ্ণ  "); output("ঙ্গ  "); output("ত্ত  "); output("ঋ  "); output("ফ্ট\n");
+    output("ফ্ব  "); output("ট্ট  ");
+    echo "\n";
+    //-----------------------------------------------
+
+
 }
 
 function input(){
@@ -51,7 +70,7 @@ function input(){
         "amar"=>"আমার","tomar"=>"তোমার","tar"=>"তার","amader"=>"আমাদের","tomader"=>"তোমাদের",
         "tomke" => "তোমাকে", "tomka" => "তোমাকে", "tomk" => "তোমাকে", "amadr"=>"আমাদের",
         "amr"=>"আমার", "tomra"=>"তোমারা", "tomora"=>"তোমারা", "abr"=>"আবার", "aber"=>"আবার",
-        "amadar"=>"আমাদের",
+        "amadar"=>"আমাদের", "tomi"=>"তুমি",
 
         "valo"=>"ভালো","bhalo"=>"ভালো","kharap"=>"খারাপ","sundor"=>"সুন্দর","boro"=>"বড়","choto"=>"ছোট",
         "notun"=>"নতুন","puraton"=>"পুরাতন","lal"=>"লাল","nil"=>"নীল","shada"=>"সাদা","kalo"=>"কালো",
@@ -127,7 +146,7 @@ function input(){
 
         "ekbar"=>"একবার","duibar"=>"দুইবার","barbar"=>"বারবার",
 
-        "ajke"=>"আজকে","kalke"=>"কালকে",
+        "ajke"=>"আজকে","kalke"=>"কালকে", "ache" => "আছে", "ace" => "আছে",
 
         "khub"=>"খুব", "valobashi" => "ভালোবাসি", "valobasi" => "ভালোবাসি",
 
