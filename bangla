@@ -64,6 +64,46 @@ function input(){
 
     global $bold_text, $normal_text;
 
+   echo $bold_text . "Enter your text:$normal_text\n";
+   $user_input = readline("=>");
+
+   if(empty($user_input)){
+
+      echo "Empty text\n";
+      return;
+
+   }
+
+   $word_map = word_list();
+
+   $words = explode(" ", strtolower($user_input));
+
+   $result = [];
+
+   foreach($words as $w){
+
+      $result[] = $word_map[$w] ?? $w;
+
+   }
+
+   $output = implode(" ", $result);
+
+   echo " \n";
+   echo "Input =>". $user_input . "\n";
+   echo "Output =>". $output . "\n";
+
+}
+
+function output(string $char){
+
+    global $bold_text, $normal_text;
+
+    echo "{$bold_text}$char{$normal_text}";
+
+}
+
+function word_list() : array{
+
     $word_map = [
 
         "ami"=>"আমি","tumi"=>"তুমি","apni"=>"আপনি","se"=>"সে","tara"=>"তারা","amra"=>"আমরা",
@@ -162,38 +202,5 @@ function input(){
 
     ];
 
-   echo $bold_text . "Enter your text:$normal_text\n";
-   $user_input = readline("=>");
-
-   if(empty($user_input)){
-
-      echo "Empty text\n";
-      return;
-
-   }
-
-   $words = explode(" ", strtolower($user_input));
-
-   $result = [];
-
-   foreach($words as $w){
-
-      $result[] = $word_map[$w] ?? $w;
-
-   }
-
-   $output = implode(" ", $result);
-
-   echo " \n";
-   echo "Input =>". $user_input . "\n";
-   echo "Output =>". $output . "\n";
-
-}
-
-function output(string $char){
-
-    global $bold_text, $normal_text;
-
-    echo "{$bold_text}$char{$normal_text}";
-
+    return $word_map;
 }
