@@ -1,0 +1,557 @@
+#!/usr/bin/env php
+
+<?php
+
+date_default_timezone_set("Asia/Dhaka");
+
+class Todo{
+
+    private PDO $db;
+
+    private const string SUCCESS = "✔";
+    private const string FAILED = "✘";
+    private const string PENDING = "⏳";
+    private const string BOLD_COLOR = "\033[1m";
+    private const string RESET_COLOR = "\033[0m";
+    private const string GREEN_COLOR = "\033[32m";
+    private const string TABLE_NAME = "todo";
+    private const string TAG = "tag";
+    private const string DESCRIPTION = "description";
+    private const string FILE = "file_name";
+    private const string ID = "id";
+    private const string IS_DONE = "is_done";
+    private const string CREATED_AT = "created_at";
+    private const string LINE = "line_number";
+    private const array ALLOWED_TAGS = ["TODO", "NOTE", "BUG", "XXX", "WORKING", "FIXME"];
+    
+
+    public function __construct()
+    {
+
+        if(!extension_loaded("pdo_sqlite")){
+
+            echo "\n";
+            echo "[" . self::FAILED . "] SQLite PDO driver is not installed.\n";
+            echo "Install it using:\n\n";
+            echo "sudo apt install php8.4-sqlite3\n\n";
+
+            exit(1);
+
+        }
+
+        $todoDBFile = getcwd() . "/todo.db";
+
+        $this->db = new PDO("sqlite:" . $todoDBFile);
+
+        $this->db->setAttribute(
+            PDO::ATTR_ERRMODE,
+            PDO::ERRMODE_EXCEPTION
+        );
+
+        $this->db->exec("
+        CREATE TABLE IF NOT EXISTS " . self::TABLE_NAME . " ( 
+        " . self::ID . " INTEGER PRIMARY KEY AUTOINCREMENT,
+        " . self::TAG . " TEXT NOT NULL,
+        " . self::DESCRIPTION . " TEXT NOT NULL,
+        " . self::FILE . " TEXT NOT NULL,
+        " . self::LINE . " INTEGER NOT NULL,
+        " . self::IS_DONE . " INTEGER DEFAULT 0,
+        " . self::CREATED_AT . " TEXT NOT NULL
+        )");
+
+        $this->db->exec("
+        CREATE INDEX IF NOT EXISTS idx_todo_tag
+        ON " . self::TABLE_NAME . " (" . self::TAG . ")"
+        );
+    
+    }
+
+    public function run(int $argc, array $argv){
+
+        if($argc < 1 || $argc > 2){
+
+            echo "[" . self::FAILED . "]" . " Invalid command\n";
+            exit(1);
+
+        }
+
+        $command = $argv[1] ?? "home";
+
+        switch($command){
+
+            case "home":
+
+                $this->home();
+
+                break;
+
+            case "add":
+
+                $this->add();
+
+                break;
+
+            case "done":
+
+                $this->done();
+
+                break;
+
+            case "search":
+
+                $this->search();
+
+                break;
+
+            case "delete":
+
+                $this->delete();
+
+                break;
+
+            case "-d":
+
+                $this->deleteAll();
+
+                break;
+
+            default:
+            echo "[" . self::FAILED . "]" . " Command not found\n";
+            echo "Usage Command:\n";
+            echo ">  php todo\n";
+            echo ">  php todo add\n";
+            echo ">  php todo done <id>\n";
+            echo ">  php todo search <tag>\n";
+            echo ">  php todo delete <id>\n";
+            echo ">  php todo -d\n";
+            exit(1);
+
+        }
+
+    }
+
+    private function home(){
+
+        try{
+
+            $todoList = $this->getAllTodoDB();
+
+        }catch(PDOException $e){
+
+            echo $e->getMessage();
+            exit(1);
+
+        }
+
+        if(empty($todoList)){
+
+            echo "Use 'php todo add' to add todo\n";
+            exit(1);
+
+        }
+
+        foreach( $todoList as $todo ){
+
+            $status = $todo[self::IS_DONE] == 1 ? self::SUCCESS : self::PENDING;
+
+            $this->showTodo(
+                $todo[self::ID],
+                $todo[self::TAG],
+                $todo[self::DESCRIPTION],
+                $todo[self::FILE],
+                $status,
+                $todo[self::LINE],
+                $todo[self::CREATED_AT]
+            );
+
+        }//loop
+
+    }
+
+    private function add(){
+
+        echo "Tag:\n";
+        $tag = readline(">");
+        echo "\n";
+
+        if(empty($tag)){
+
+            echo "[" . self::FAILED . "]" . " Empty tag\n";
+            exit(1);
+
+        }
+
+        $upperCaseTag = strtoupper($tag);
+
+        if(!in_array($upperCaseTag, self::ALLOWED_TAGS, true)){
+
+            echo "[" . self::FAILED . "]" . " Tag not found\n";
+            echo "Usage tag [ " . implode(" | ", self::ALLOWED_TAGS) . " ]\n";
+            exit(1);
+
+        }
+
+        echo "Message:\n";
+        $message = readline(">");
+        echo "\n";
+
+        if(empty($message)){
+
+            echo "[" . self::FAILED . "]" . " Empty message\n";
+            exit(1);
+
+        }
+
+        echo "File:\n";
+        $file = readline(">");
+        echo "\n";
+
+        if(empty($file)){
+
+            echo "[" . self::FAILED . "]" . " Empty file name\n";
+            exit(1);
+
+        }
+
+        echo "Line:\n";
+        $line = (int) readline(">");
+        echo "\n";
+
+        if($line <= 0){
+
+            echo "[" . self::FAILED . "]" . " Invalid line number\n";
+            exit(1);
+
+        }
+
+        try{
+
+            $isInserted = $this->insertDB(
+                $upperCaseTag,
+                $message,
+                $file,
+                $line
+            );
+
+            echo $isInserted == true ? "[" . self::SUCCESS . "]" . " Todo insert successful.\n" : "[" . self::FAILED . "]" . " Todo insert failed.\n"; 
+            exit;
+
+        }catch(PDOException $e){
+
+            echo $e->getMessage();
+            exit(1);
+
+        }
+
+    }
+
+    private function done(){
+
+        echo "ID:\n";
+        $id = (int) readline(">");
+        echo "\n";
+
+        if($id <= 0){
+
+            echo "[" . self::FAILED . "]" . " Invalid command\n";
+            exit(1);
+
+        }
+
+        try{
+
+            $isUpdated = $this->updateTodoStatusDB((int)$id);
+
+            echo $isUpdated == true ? "[" . self::SUCCESS . "]" . " Status update successful\n" : "[" . self::FAILED . "]" . " Status update failed\n";
+            exit;
+
+        }catch(PDOException $e){
+
+            echo $e->getMessage();
+            exit(1);
+
+        }
+
+    }
+
+    private function search(){
+
+        echo "Tag:\n";
+        $tagName = readline(">");
+        echo "\n";
+
+        if(empty($tagName)){
+
+            echo "[" . self::FAILED . "]" . " Invalid command\n";
+            exit(1);
+
+        }
+
+        $upperCaseTag = strtoupper($tagName);
+
+        if(!in_array($upperCaseTag, self::ALLOWED_TAGS, true)){
+
+            echo "[" . self::FAILED . "]" . " Tag not found\n";
+            echo "Usage tag [ " . implode(" | ", self::ALLOWED_TAGS) . " ]\n";
+            exit(1);
+
+        }
+
+        try{
+
+            $todoList = $this->getAllTodoDB($upperCaseTag);
+
+        }catch(PDOException $e){
+
+            echo $e->getMessage();
+            exit(1);
+
+        }
+
+        if(empty($todoList)){
+
+            echo "Use 'php todo add' to add todo\n";
+            exit;
+
+        }
+
+        foreach( $todoList as $todo ){
+
+            $status = $todo[self::IS_DONE] == 1 ? self::SUCCESS : self::PENDING;
+
+            $this->showTodo(
+                $todo[self::ID],
+                $todo[self::TAG],
+                $todo[self::DESCRIPTION],
+                $todo[self::FILE],
+                $status,
+                $todo[self::LINE],
+                $todo[self::CREATED_AT]
+            );
+
+        }//loop
+
+    }
+
+    private function delete(){
+
+        echo "ID:\n";
+        $id = (int) readline(">");
+        echo "\n";
+
+        if($id <= 0){
+
+            echo "[" . self::FAILED . "]" . " Invalid command\n";
+            exit(1);
+
+        }
+
+        try{
+
+            $isDeleted = $this->deleteTodoDB((int)$id);
+
+            echo $isDeleted == true ? "[" . self::SUCCESS . "]" . " Todo delete successful\n" : "[" . self::FAILED . "]" . " Todo delete failed\n";
+            exit;
+
+        }catch(PDOException $e){
+
+            echo $e->getMessage();
+            exit(1);
+
+        }
+
+    }
+
+    private function deleteAll(){
+
+        $dbData = [];
+
+        try{
+
+            $dbData = $this->getAllTodoDB();
+
+        }catch(PDOException $e){
+
+            echo $e->getMessage();
+            exit(1);
+
+        }
+
+        if(empty($dbData)){
+
+            echo "Use 'php todo add' to add todo\n";
+            exit(1);
+
+        }
+
+        try{
+
+            $isDeleteAll = $this->deleteAllTodoDB();
+
+            echo $isDeleteAll == true ? "[" . self::SUCCESS . "]" . " All todo delete successful\n" : "[" . self::FAILED . "]" . "All todo delete failed\n";
+            exit;
+
+        }catch(PDOException $e){
+
+            echo $e->getMessage();
+            exit(1);
+
+        }
+
+    }
+
+    private function showTodo(
+        string $id,
+        string $tag,
+        string $description,
+        string $file,
+        string $status,
+        int $line,
+        string $createdAt
+    ){
+
+        echo self::BOLD_COLOR . self::GREEN_COLOR . "ID      : " . self::RESET_COLOR . $id . "\n";
+        echo self::BOLD_COLOR . self::GREEN_COLOR . "Tag     : " . self::RESET_COLOR . $tag . "\n";
+        echo self::BOLD_COLOR . self::GREEN_COLOR . "Message : " . self::RESET_COLOR . $description . "\n";
+        echo self::BOLD_COLOR . self::GREEN_COLOR . "Status  : " . self::RESET_COLOR . $status . "\n";
+        echo self::BOLD_COLOR . self::GREEN_COLOR . "File    : " . self::RESET_COLOR . $file . " : " . $line . "\n";
+        echo self::BOLD_COLOR . self::GREEN_COLOR . "Date    : " . self::RESET_COLOR . $createdAt . "\n";
+        echo "\n";
+
+    }
+
+    /*
+    
+    * Database functions
+    * Insert
+    * get
+    * update
+
+    */
+
+    protected function insertDB(
+        string $tag,
+        string $description,
+        string $file,
+        int $line
+    ) : bool{
+
+        $currentDate = date("d - M - Y");
+
+        $stmt = $this->db->prepare(
+            "INSERT INTO " 
+            . self::TABLE_NAME 
+            . "(" 
+            . self::TAG 
+            . ", " 
+            . self::DESCRIPTION
+            . ", "
+            . self::FILE
+            . ", "
+            . self::LINE
+            . ", "
+            . self::IS_DONE
+            . ", "
+            . self::CREATED_AT
+            . ")"
+            . "VALUES (?, ?, ?, ?, ?, ?)"
+            
+            );
+
+        return $stmt->execute([$tag, $description, $file, $line, 0, $currentDate]);
+    }
+
+    protected function getAllTodoDB(string $tag = "") : array{
+
+        $allTodos = [];
+
+        if(empty($tag)){
+
+            $stmt = $this->db->query(
+                "SELECT * FROM " . self::TABLE_NAME . " ORDER BY " . self::ID . " DESC"
+            );
+
+            $allTodos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        }else{
+
+            $stmt = $this->db->prepare(
+                "SELECT * FROM " . self::TABLE_NAME . " WHERE " . self::TAG . " = ?" . " ORDER BY " . self::ID . " DESC"
+            );
+
+            $stmt->execute([$tag]);
+
+            $allTodos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        }
+
+        return $allTodos;
+
+    }
+
+    protected function updateTodoStatusDB(
+        int $id
+    ) : bool{
+
+        $stmt = $this->db->prepare(
+            "UPDATE "
+            . self::TABLE_NAME 
+            . " SET "
+            . self::IS_DONE
+            . " = 1 WHERE "
+            . self::ID 
+            . " = ?"
+        );
+
+        $stmt->execute([$id]);
+
+        return $stmt->rowCount() > 0;
+
+    }
+
+    protected function deleteTodoDB(
+        int $id
+    ) : bool{
+
+        $stmt = $this->db->prepare(
+            "DELETE FROM "
+            . self::TABLE_NAME 
+            . " WHERE "
+            . self::ID
+            . " = ?"
+        );
+
+        $stmt->execute([$id]);
+
+        return $stmt->rowCount() > 0;
+
+    }
+
+    protected function deleteAllTodoDB() : bool{
+
+        $stmt = $this->db->prepare(
+            "DELETE FROM "
+            . self::TABLE_NAME 
+            
+        );
+
+        $isAllDeleted = $stmt->execute();
+
+        if($isAllDeleted){
+
+            $this->db->exec("DELETE FROM sqlite_sequence WHERE name = '"
+            . self::TABLE_NAME
+            . "'"
+            );
+
+        }
+
+
+        return $isAllDeleted;
+
+    }
+
+}
+
+$todo = new Todo();
+$todo->run($argc, $argv);
