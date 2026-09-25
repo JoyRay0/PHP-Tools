@@ -11,12 +11,12 @@ switch($command){
         break;
 
     case "make:controller":
-        create_controller();
+        create_controller($name);
         $name = "";
         break;
 
     case "make:middleware":
-        create_middleware();
+        create_middleware($name);
         $name = "";
         break;
 
@@ -26,10 +26,10 @@ switch($command){
 
     default:
         echo "please enter a valid command\n";
-        echo "  slim install\n";
-        echo "  slim update\n";
-        echo "  slim make:controller <Name>\n";
-        echo "  slim make:middleware <Name>\n";
+        echo ">  slim install\n";
+        echo ">  slim update\n";
+        echo ">  slim make:controller <Name>\n";
+        echo ">  slim make:middleware <Name>\n";
 
 }
 
@@ -91,11 +91,25 @@ RewriteRule ^ index.php [QSA,L]
     ");
 
     file_put_contents("public/index.php", 
-    '<?php\n
-require __DIR__ . "/Api/vendor/autoload.php";\n\n
-use Dotenv\Dotenv;\n\n\n
-$env = Dotenv::createImmutable( __DIR__ . "/Api");\n\n
-$env->load();\n\n
+    '<?php
+
+require __DIR__ . "/Api/vendor/autoload.php";
+
+use Dotenv\Dotenv;
+use Slim\Factory\AppFactory;
+
+
+$env = Dotenv::createImmutable( __DIR__ . "/Api");
+$env->load();
+
+$app = AppFactory::create();
+
+$app->addRoutingMiddleware();
+$app->addBodyParsingMiddleware();
+
+//$app->get("/test", TestController::class .":Test");
+
+$app->run();
     ');
 
     file_put_contents(".env", 
@@ -118,9 +132,6 @@ DB_PASSWORD=''
     "/.env\n
 slim
     ");
-
-
-    $compser_data = json_decode(file_get_contents("composer.json") , true);
 
     $composer_path = [
 
@@ -152,39 +163,40 @@ slim
     shell_exec('composer update');
 
     echo "\n";
-    echo ($slim == true) ? "====> Slim insatlled [✔]\n" : "====> Slim not installed [✖]\n";
-    echo ($env == true) ? "====> Dotenv insatlled [✔]\n" : "====> Dotenv not installed [✖]\n";
-    echo ($phpfastcache == true) ? "====> php fast cache insatlled [✔]\n" : "====> php fast cache not installed [✖]\n";
+    echo ($slim == true) ? "====> Slim installed [✔]\n" : "====> Slim not installed [✖]\n";
+    echo ($env == true) ? "====> Dotenv installed [✔]\n" : "====> Dotenv not installed [✖]\n";
+    echo ($phpfastcache == true) ? "====> php fast cache installed [✔]\n" : "====> php fast cache not installed [✖]\n";
     echo "\n";
 
 
 }
 
-function create_controller(){
+function create_controller(string $name){
 
-    global $name;
-
-    if(!$name){
+    if(empty($name)){
 
         echo "Controller name required\n";
         exit;
 
     }
 
-    $path = __DIR__ . "/src/Controllers/$name.php";
+    $path = __DIR__ . "/src/Controllers/{$name}.php";
 
-    $content = ' <?php
+    $content = "<?php
 
 namespace App\Controllers;
 
-use Slim\Psr7\Response;
-use Slim\Psr7\Request;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
-class $name {
+class $name{
 
-    public function index(Request $request, Response $response){}
+    public function index(Request \$request, Response \$response){
+    
+    
+    }
 
-}';
+}";
 
     file_put_contents($path, $content);
 
@@ -192,38 +204,34 @@ class $name {
 
 }
 
-function create_middleware(){
+function create_middleware(string $name){
 
-    global $name;
-
-    if(!$name){
+    if(empty($name)){
 
         echo "Middleware name required\n";
         exit;
 
     }
 
-    $path = __DIR__ . "/src/Middlewares/$name.php";
+    $path = __DIR__ . "/src/Middlewares/{$name}.php";
 
-    $content = '<?php
+    $content = "<?php
 
 namespace App\Middlewares;
 
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Server\RequestHandlerInterface as Handler;
 
-class $name {
+class {$name} {
 
-    public function __invoke(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface{
+    public function __invoke(Request \$request, Handler \$handler): Response{
 
-        return $handler->handle($request);
+        return \$handler->handle(\$request);
 
     }
 
-}
-   
-';
+}";
 
     file_put_contents($path, $content);
 
