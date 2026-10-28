@@ -1,6 +1,6 @@
 <?php
 
-class Android_remove{
+final class Android_remove{
 
     private string $success = "OK";
     private string $failed = "ERROR";
@@ -28,6 +28,8 @@ class Android_remove{
             echo ">  php android_remove.php remove\n";
             echo ">  php android_remove.php -f <Package Name>\n";
             echo ">  php android_remove.php restore\n";
+
+            echo ">  php android_remove.php help\n";
             exit(1);
 
         }
@@ -93,6 +95,12 @@ class Android_remove{
 
                 break;
 
+            case "help":
+
+                $this->help();
+
+                break;
+
             default:
             echo "Invalid Command\n";
             echo ">  php android_remove.php\n";
@@ -102,6 +110,8 @@ class Android_remove{
             echo ">  php android_remove.php remove\n";
             echo ">  php android_remove.php -f <Package Name>\n";
             echo ">  php android_remove.php restore\n";
+
+            echo ">  php android_remove.php help\n";
             exit(1);
 
         }
@@ -237,6 +247,22 @@ class Android_remove{
 
     }
 
+    private function help(){
+
+        echo "\n";
+        echo "Usage:\n\n";
+
+        echo "   list                          - Display all apps installed on the Android device.\n";
+        echo "   user-list                     - Display user-installed apps only.\n";
+        echo "   find                          - Search for an app by its name.\n";
+        echo "   remove                        - Remove an app by selecting it from the list.\n";
+        echo "   -f <Package Name>             - Force-remove an app using its package name.\n";
+        echo "   restore                       - Restore a previously removed system app by package name.\n";
+        echo "                                    Only works if the system package is still available on the device.\n";
+
+        echo "\n";
+    }
+
     private function save_history(string $package_name){
 
         file_put_contents(
@@ -246,7 +272,6 @@ class Android_remove{
         );
 
     }
-
 
 }
 
