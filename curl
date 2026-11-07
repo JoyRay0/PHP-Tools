@@ -2,12 +2,17 @@
 
 <?php
 
-$url = "https://lawguidebook.rksoftwares.fun/";
-$json = json_encode([]);
+$url = "";
+$json = json_encode([
+    
+]);
 $header = [
-    "Content-Type: application/json"
+    
 ];
-$request_method = "get";
+$request_method = "post";
+
+$bold_color = "\033[1m";
+$reset_color = "\033[0m";
 
 $ch = curl_init($url);
 
@@ -38,24 +43,59 @@ if($request_method == "post"){
 
 }
 
+$start_time = microtime(true);
+
 $result = curl_exec($ch);
 
-if(curl_error($ch)){
+$end_time = microtime(true);
 
-    echo " \n";
-    echo "===> Error : " . curl_error($ch);
-    echo " \n";
+$responseTime = ($end_time - $start_time);
+
+$curl_error_no = curl_errno($ch);
+$curl_error = curl_error($ch);
+$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+if($result === false){
+
+    echo "\n";
+    echo "=============== CURL ERROR ==============\n";
+    echo "{$bold_color}Error Code    :{$reset_color} $curl_error_no\n";
+    echo "{$bold_color}Error Message :{$reset_color} $curl_error\n";
+    echo "=========================================\n";
+    echo "\n";
 
 }else{
 
+    $data = json_decode($result, true);
+
+    if(json_last_error() !== JSON_ERROR_NONE){
+
+        echo "\n";
+        echo "=============== JSON ERROR ==============\n";
+        echo "{$bold_color}Error Code    :{$reset_color} " . json_last_error() . "\n";
+        echo "{$bold_color}Error Message :{$reset_color} " . json_last_error_msg() . "\n";
+        echo "{$bold_color}Message       :{$reset_color} ". $result . "\n";
+        echo "=========================================\n";
+        echo "\n";
+
+    }
+
     echo " \n";
-    echo json_encode(json_decode($result, true), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    echo json_encode(
+        $data, 
+        JSON_UNESCAPED_UNICODE | 
+        JSON_PRETTY_PRINT | 
+        JSON_UNESCAPED_SLASHES
+    );
     echo " \n";
 
 }
 
+echo "\n";
+echo "{$bold_color}Response Time :{$reset_color} " . round($responseTime, 2) . " Seconds";
+
 echo " \n";
-echo "===> Status : " . curl_getinfo($ch, CURLINFO_HTTP_CODE);
+echo "{$bold_color}Status :{$reset_color} " . $http_code;
 echo " \n";
 
 curl_close($ch);
