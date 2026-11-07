@@ -24,12 +24,23 @@ switch($command){
         update_slim();
         break;
 
+    case "-p":
+        passthru("composer dump-autoload --optimize");
+        break;
+
+    case "-d":
+
+        passthru("composer dump-autoload");
+        break;
+
     default:
         echo "please enter a valid command\n";
         echo ">  slim install\n";
         echo ">  slim update\n";
         echo ">  slim make:controller <Name>\n";
         echo ">  slim make:middleware <Name>\n";
+        echo ">  slim -p\n";
+        echo ">  slim -d\n";
 
 }
 
@@ -103,9 +114,6 @@ $env = Dotenv::createImmutable( __DIR__ . "/Api");
 $env->load();
 
 $app = AppFactory::create();
-
-$app->addRoutingMiddleware();
-$app->addBodyParsingMiddleware();
 
 //$app->get("/test", TestController::class .":Test");
 
